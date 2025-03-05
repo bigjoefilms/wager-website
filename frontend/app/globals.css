@@ -2,3 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  position: relative;
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(135deg, #ffffff, #fbe66f);
+  filter: blur(50px);
+  z-index: -1;
+  animation: moveBackground 5s infinite linear;
+}
+
+@keyframes moveBackground {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-20%, -20%);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
