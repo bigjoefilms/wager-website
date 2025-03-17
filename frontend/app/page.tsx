@@ -24,6 +24,12 @@ import { ToastContainer, toast } from 'react-toastify';import {
 import Link from "next/link";
 
 import bs58 from 'bs58'
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
+
+
 
 export default function Home() {
   const [rotation, setRotation] = useState(0);
@@ -63,7 +69,7 @@ const sendSonic = async () => {
     tx.add(
         SystemProgram.transfer({
             fromPubkey: wallet,
-            toPubkey: new PublicKey("3oRz4ZZzjmbujnnxXKqoNJ1dRK9XAe6S465NbAZ38FjJ"),
+            toPubkey: new PublicKey("6trZQ2U1oWzLmcqRT98ba7JtMZsdnrzNEzN7svH11VCy"),
             lamports: (selectedBet ?? 0) * LAMPORTS_PER_SOL
         })
     );
@@ -149,7 +155,7 @@ const handleSpin = async () => {
    
   };
   
-  const sender: Keypair = Keypair.fromSecretKey(bs58.decode("2hEYjVAyxNvPFPERouBkDRCgvwzvECN3VyVrKXExN88nksXNg3wGNfyVgLjTpE35sxKMcuRER1sJLP8CaZ4zaMme"));
+  const sender: Keypair = Keypair.fromSecretKey(bs58.decode(`${process.env.NEXT_PUBLIC_PRIVATE_KEY}`));
  
 
 const handleClaim = async () => {
@@ -187,26 +193,34 @@ setShowModal(false);
 };
 
 
-  useEffect(() => {
-    const fetchBalance = async () => {
-      if (!address) return;
+useEffect(() => {
+  if (!address) return;
 
-      try {
-        const commitment: Commitment = "processed";
-        const connection = new Connection("https://api.testnet.v1.sonic.game", {
-          commitment,
-          wsEndpoint: "wss://api.testnet.v1.sonic.game",
-        });
+  const commitment: Commitment = "processed";
+  const connection = new Connection("https://api.testnet.v1.sonic.game", {
+    commitment,
+    wsEndpoint: "wss://api.testnet.v1.sonic.game",
+  });
 
-        const balance = await connection.getBalance(new PublicKey(address));
-        setBalance(balance / LAMPORTS_PER_SOL);
-      } catch (error) {
-        console.error("Error fetching balance:", error);
-      }
-    };
+  const fetchBalance = async () => {
+    try {
+      const balance = await connection.getBalance(new PublicKey(address));
+      setBalance(balance / LAMPORTS_PER_SOL);
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    }
+  };
 
-    fetchBalance();
-  }, [address]);
+  // Fetch balance every 5 seconds
+  const interval = setInterval(fetchBalance, 5000);
+
+  // Fetch balance immediately
+  fetchBalance();
+
+  return () => clearInterval(interval); // Cleanup on unmount
+}, [address]);
+
+
 
   return (
     <> 
