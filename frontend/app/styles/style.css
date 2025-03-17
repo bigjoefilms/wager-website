@@ -4,7 +4,7 @@ body {
     position: relative;
     margin: 0;
     height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
   }
   
   body::before {
@@ -18,6 +18,7 @@ body {
     filter: blur(50px);
     z-index: -1;
     animation: moveBackground 5s infinite linear;
+    overflow-x: hidden;
   }
   
   @keyframes moveBackground {
@@ -59,7 +60,7 @@ body {
     cursor: pointer;
     user-select: none;
 }
-.container .spinBtn::before {
+/* .container .spinBtn::before {
 content: '';
 position: absolute;
 top: -28px;
@@ -67,7 +68,7 @@ width: 20px;
 height: 30px;
 background-color: #fff;
 clip-path: polygon(50% 0%, 15% 100%, 85% 100%);
-}
+} */
 
 .container .wheel 
 {
@@ -109,7 +110,7 @@ text-shadow: 3px 5px 2px rgba(0, 0, 0, 0.15);
 }
 .container .wheel .number span::after 
 {
-    content: '$';
+    content: '';
     position: absolute;
     font-size: 0.75em;
     font-weight: 500;
