@@ -88,7 +88,7 @@ const handleSpin = async () => {
 
   try {
     // await sendSonic(selectedBet)
-    const transactionResult = await sendSonic(selectedBet);
+    const transactionResult = await sendSonic();
 
     // setIsSpinning(true);
     // Wait for the sendSonic transaction to complete
@@ -303,7 +303,7 @@ setShowModal(false);
               <ul>- Some $SONIC in your wallet to play</ul>
               
             </div>
-            <div className="mt-10">Click to select </div>
+            <div className="mt-10">Click to select an amount </div>
 
             {/* Bet Selection */}
             <div className="flex mt-1 p-2">
