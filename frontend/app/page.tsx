@@ -8,25 +8,22 @@ import WheelImg from "@/public/assets/trophy.jpg";
 import Open from "@/public/assets/open-eye.png"
 import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
 import type { Provider } from '@reown/appkit-adapter-solana/react';
-import { Commitment, Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { Commitment, Connection, LAMPORTS_PER_SOL, PublicKey,SystemProgram } from "@solana/web3.js";
 import { ToastContainer, toast } from 'react-toastify';import {
-  // Keypair,
+  Keypair,
   Transaction,
 } from '@solana/web3.js';
 
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  getAssociatedTokenAddress,
-  TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountInstruction,
-  createTransferCheckedInstruction
-} from "@solana/spl-token";
+// import {
+//   ASSOCIATED_TOKEN_PROGRAM_ID,
+//   getAssociatedTokenAddress,
+//   TOKEN_PROGRAM_ID,
+//   createAssociatedTokenAccountInstruction,
+//   createTransferCheckedInstruction
+// } from "@solana/spl-token";
 import Link from "next/link";
 
-// import * as base58 from 'bs58';
-
-// import Sonic from "@/public/assets/sonic.png"
-// import SpinSound from "../public/sounds/sound.mp3";
+import bs58 from 'bs58'
 
 export default function Home() {
   const [rotation, setRotation] = useState(0);
@@ -44,72 +41,32 @@ export default function Home() {
   const wallet = address ? new PublicKey(address) : null; 
   const [isClaiming] = useState(false);
 
-const handleClaim = async () => {
-  toast.success(`You have succefully Claimed Your ${selectedBet} $Sonic token`)
-  setShowModal(false)
-};
 
 const connection = new Connection('https://api.testnet.v1.sonic.game', {
     commitment,
     wsEndpoint: 'wss://api.testnet.v1.sonic.game'
 });
 
-const tokenMintAccount = new PublicKey("H6WqcoA2238RdD92Jkss1KfRmzX2fZyREPspVdStzZX9");
 
-const to = new PublicKey("6trZQ2U1oWzLmcqRT98ba7JtMZsdnrzNEzN7svH11VCy");
 
-const sendSonic = async (sonicAmount: number) => {
+const sendSonic = async () => {
   try {
-    const tx = new Transaction();
 
     if (!wallet || !wallet) {
       throw new Error("Wallet is not connected or invalid.");
     }
 
-    const toTokenAccount = await getAssociatedTokenAddress(
-      tokenMintAccount,
-      to,
-      true,
-      TOKEN_PROGRAM_ID,
-      ASSOCIATED_TOKEN_PROGRAM_ID
-    );
+   
 
-    const senderTokenAccount = await getAssociatedTokenAddress(
-      tokenMintAccount,
-      wallet, // Use the wallet's public key
-      true,
-      TOKEN_PROGRAM_ID,
-      ASSOCIATED_TOKEN_PROGRAM_ID
-    );
+    const tx = new Transaction();
 
-    // Ensure the receiver has an associated token account
-    if ((await connection.getAccountInfo(toTokenAccount)) == null) {
-      tx.add(
-        createAssociatedTokenAccountInstruction(
-          wallet,
-          toTokenAccount,
-          to,
-          tokenMintAccount,
-          TOKEN_PROGRAM_ID,
-          ASSOCIATED_TOKEN_PROGRAM_ID
-        )
-      );
-    }
-
-    // Transfer tokens
     tx.add(
-      createTransferCheckedInstruction(
-        senderTokenAccount,
-        tokenMintAccount,
-        toTokenAccount,
-        wallet,
-        sonicAmount * LAMPORTS_PER_SOL, // SONIC amount
-        9,
-        [],
-        TOKEN_PROGRAM_ID
-      )
+        SystemProgram.transfer({
+            fromPubkey: wallet,
+            toPubkey: new PublicKey("3oRz4ZZzjmbujnnxXKqoNJ1dRK9XAe6S465NbAZ38FjJ"),
+            lamports: (selectedBet ?? 0) * LAMPORTS_PER_SOL
+        })
     );
-    console.log("Token Mint Address:", tokenMintAccount.toBase58());
 
     tx.feePayer = wallet;
     const { blockhash } = await connection.getLatestBlockhash();
@@ -128,24 +85,20 @@ const sendSonic = async (sonicAmount: number) => {
 
 const handleSpin = async () => {
   if (isSpinning || selectedBet === null) return
- 
-
-  
-
-
 
   try {
-    await sendSonic(selectedBet)
+    // await sendSonic(selectedBet)
+    const transactionResult = await sendSonic(selectedBet);
 
-    setIsSpinning(true);
+    // setIsSpinning(true);
     // Wait for the sendSonic transaction to complete
     
 
-    // if (!transactionResult) {
-    //   console.error("Transaction canceled");
-    //   setIsSpinning(true);
-    //   return; // Stop execution if the transaction was canceled
-    // }
+    if (!transactionResult) {
+      toast.error("Transaction canceled");
+      setIsSpinning(false);
+      return; // Stop execution if the transaction was canceled
+    }
     setIsSpinning(true);
 
     // Play the spinning sound
@@ -196,6 +149,43 @@ const handleSpin = async () => {
    
   };
   
+  const sender: Keypair = Keypair.fromSecretKey(bs58.decode("2hEYjVAyxNvPFPERouBkDRCgvwzvECN3VyVrKXExN88nksXNg3wGNfyVgLjTpE35sxKMcuRER1sJLP8CaZ4zaMme"));
+ 
+
+const handleClaim = async () => {
+  if (!result || !wallet) {
+    toast.error("Invalid claim details.");
+    return;
+  }
+ 
+
+  console.log(result);
+
+ try{
+  const tx = new Transaction();
+  tx.add(
+    SystemProgram.transfer({
+        fromPubkey: sender.publicKey,
+        toPubkey: wallet,
+        lamports: (result ?? 0) * LAMPORTS_PER_SOL
+    })
+);
+
+tx.feePayer = sender.publicKey;
+const { blockhash } = await connection.getLatestBlockhash();
+tx.recentBlockhash = blockhash;
+
+const txHash = await connection.sendTransaction(tx, [sender]);
+
+console.log("tx hash: ", txHash);
+toast.success(`Successfully claimed ${result} $SONIC!`);
+setShowModal(false);
+  } catch (error) {
+    console.error("Claim transaction failed:", error);
+    toast.error("Claim failed. Please try again.");
+  }
+};
+
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -219,7 +209,9 @@ const handleSpin = async () => {
   }, [address]);
 
   return (
-    <main className="">
+    <> 
+    <main className="hidden md:block h-[2000px]">
+      
          <ToastContainer />
       <div className=" flex justify-between p-10 lg:px-[150px] ">
         <div className="flex items-center gap-4">
@@ -309,11 +301,13 @@ const handleSpin = async () => {
               <h4>Just keep in mind:</h4>
               <ul>- You must have at least 0.01 SOL</ul>
               <ul>- Some $SONIC in your wallet to play</ul>
+              
             </div>
+            <div className="mt-10">Click to select </div>
 
             {/* Bet Selection */}
-            <div className="flex mt-10">
-              {[0.01, 0.1, 1,2].map((bet) => (
+            <div className="flex mt-1 p-2">
+              {[1, 2, 3,4].map((bet) => (
                 <button
                   key={bet}
                   onClick={() => setSelectedBet(bet)}
@@ -391,5 +385,10 @@ const handleSpin = async () => {
       </div>
       {/* <footer className="flex justify-center items-center text-[200px]"> Made by Bigjoe with ❤️ </footer> */}
     </main>
+    <div className="block md:hidden text-center p-6">
+    <p className="text-lg font-semibold text-[#222]">
+      This platform is currently only available on tablets and desktops. Please use a larger screen to access it.
+    </p>
+  </div></>
   );
 }
