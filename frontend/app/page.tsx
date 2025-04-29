@@ -174,7 +174,10 @@ export default function Home() {
 
   return (
     <>
-      <main className="">
+      <main className="relative">
+      <div className=" h-full w-full bg-slate-950  ">
+        <div className="absolute bottom-0 left-0 -z-10 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_100%_100%_at_100%_100%,#000_70%,transparent_100%)]">
+          </div></div>
         <ToastContainer
           position="bottom-left"
           autoClose={5000}
@@ -187,8 +190,8 @@ export default function Home() {
           pauseOnHover
           theme="dark"
         />
-        <main className=" w-full p-8 md:p-8 ">
-          <header className=" justify-center flex items-center ">
+        <main className=" w-full p-8 md:p-8 z-20">
+          <header className=" justify-center flex items-center  ">
             <div className="max-w-[1350px] w-full justify-between flex items-center">
               <div>
               <Image src={Logo} alt='logo' width={60} height={50} className="rounded-2xl "/>
@@ -300,7 +303,7 @@ export default function Home() {
                           Spinning...
                         </span>
                       ) : canClaim ? (
-                        'Claim your tokens first'
+                        'Claim first'
                       ) : (
                         'Click to play'
                       )}
