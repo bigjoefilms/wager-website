@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ContextProvider from '../context'
 import localFont from 'next/font/local'
+
 import {twMerge } from "tailwind-merge";
 
 // const geistSans = Geist({
@@ -32,6 +33,7 @@ const Aeonik = localFont({
   ],
 })
 
+
 // const geistMono = Geist_Mono({
 //   variable: "--font-geist-mono",
 //   subsets: ["latin"],
@@ -39,7 +41,7 @@ const Aeonik = localFont({
 
 export const metadata: Metadata = {
   title: "WagerWise",
-  description: "Sonic Gaming Platform: Earn $SONIC While You Play!",
+  description: "Online Gaming Platform: Earn While You Play!",
 };
 
 export default function RootLayout({
@@ -49,7 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={twMerge(Aeonik.className, "bg-[#efefef] text-black antialised)")}>
+      <body className={twMerge(Aeonik.className, " text-white antialised bg-[#0B0F1E]")}>
          <ContextProvider>  {children}</ContextProvider>
       </body>
     </html>

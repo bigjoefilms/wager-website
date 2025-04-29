@@ -5,11 +5,13 @@
 body {
   position: relative;
   margin: 0;
-  height: 100vh;
-  overflow: hidden;
+  
+  background-color: #0B0F1E ;
+  background-image: url("/backgroundimg.pn");
+  
 }
 
-body::before {
+/* body::before {
   content: "";
   position: absolute;
   top: 0;
@@ -32,4 +34,22 @@ body::before {
   100% {
     transform: translate(0, 0);
   }
+} */
+
+/* Custom toast styles */
+.Toastify__toast {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.Toastify__toast--success {
+  background: #F56CA0 !important;
+}
+
+.Toastify__toast--error {
+  background: #ff4b4b !important;
+}
+
+.Toastify__progress-bar {
+  background: rgba(255, 255, 255, 0.7);
 }

@@ -17,7 +17,7 @@ export const modal = createAppKit({
   projectId : projectId || '',
   networks,
   metadata,
-  themeMode: 'light',
+  themeMode: 'dark',
   features: {
     analytics: true, // Optional - defaults to your Cloud configuration
     email:true,
