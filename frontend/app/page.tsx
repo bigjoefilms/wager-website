@@ -15,7 +15,6 @@ import {
 import Link from "next/link";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 import type { Provider } from "@reown/appkit-adapter-solana/react";
 import {
   Connection,
@@ -33,8 +32,14 @@ import {
   createAssociatedTokenAccountInstruction,
 } from "@solana/spl-token";
 import bs58 from "bs58";
-
+// import UpDownGame from "./components/UpDownGame";
 const Kaijuz = localFont({ src: "../fonts/center.otf" });
+// import '../envConfig.ts'
+
+
+
+
+
 
 export default function Home() {
   const [rotation, setRotation] = useState(0);
@@ -51,6 +56,7 @@ export default function Home() {
   const { walletProvider } = useAppKitProvider<Provider>("solana");
   const commitment: Commitment = "processed";
   const [landedLabel, setLandedLabel] = useState<string | null>(null);
+  const [currentGame] = useState<'wheel' | 'updown'>('wheel');
 
   
   const connection = new Connection(
@@ -99,6 +105,24 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, [address]);
+
+  // Restore claim state on mount
+  useEffect(() => {
+    const storedCanClaim = localStorage.getItem("canClaim");
+    const storedResult = localStorage.getItem("result");
+    if (storedCanClaim === "true" && storedResult) {
+      setCanClaim(true);
+      setResult(Number(storedResult));
+    }
+  }, []);
+
+  // Persist claim state when it changes
+  useEffect(() => {
+    localStorage.setItem("canClaim", canClaim ? "true" : "false");
+    if (result !== null) {
+      localStorage.setItem("result", result.toString());
+    }
+  }, [canClaim, result]);
 
   const handleConnectWallet = async () => {
     open();
@@ -168,14 +192,13 @@ export default function Home() {
     }
   };
 
-  const sender: Keypair = Keypair.fromSecretKey(
-    bs58.decode(
-      "ZS2f28kKK5RRZo1oT9Gg2YLBFSYPWFSnmtgcwwSWxo9YG8PP4u2rASUaxGee1wxUjx9bDFy7LfGPsQeCQFJGtiA"
-    )
-  );
+  const privateKey = process.env.NEXT_PUBLIC_PRIVATE_KEY;
+  if (!privateKey) {
+    throw new Error("NEXT_PUBLIC_PRIVATE_KEY is not set in environment variables.");
+  }
+  const sender: Keypair = Keypair.fromSecretKey(bs58.decode(privateKey));
 
   const handleClaim = async () => {
-    // if (!result ) return;
     if (!address) {
       throw new Error("Address is required");
     }
@@ -236,7 +259,9 @@ export default function Home() {
       toast.success(`Successfully claimed ${result} !`);
       setShowModal(false);
       setIsClaiming(false);
-      setCanClaim(false)
+      setCanClaim(false);
+      localStorage.removeItem("canClaim");
+      localStorage.removeItem("result");
     } catch (error) {
       console.error(error);
       toast.error("Failed to claim tokens. Please try again.", {
@@ -256,7 +281,7 @@ export default function Home() {
       if (!wallet) throw new Error("Wallet is not connected.");
   
       const tokenMint = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
-      const to = new PublicKey("FqNYz8CK9BUbtE29SzjeNtvqbLVSgRmg3gjax7pahTaN");
+      const to = new PublicKey("GtR7Tmu6eRpWKSpT1uspPUqVZhuGgyF4vgqqkjuzz2ZV");
   
       const senderATA = await getAssociatedTokenAddress(tokenMint, wallet, true);
       const toATA = await getAssociatedTokenAddress(tokenMint, to, true);
@@ -348,6 +373,10 @@ export default function Home() {
                   {isConnected ? shortenAddress(address) : "Connect wallet"}
                 </button>
 
+                <div className="flex items-end md:flex-row flex-col gap-3 md:gap-6">
+
+               
+
                 <div className="flex items-center gap-2">
                   <Image src={Logoimg} alt="usdcicon" width={20} height={20} />
 
@@ -356,7 +385,22 @@ export default function Home() {
                       ? `${usdcBalance.toFixed(2)} USDC`
                       : "0.00 USDC"}
                   </span>
+                  
                 </div>
+
+                <div className="flex items-center gap-2 opacity-70 cursor-not-allowed">
+                  <Image src={Logo} alt="usdcicon" width={20} height={20} />
+
+                  <span className="text-[12px] md:text-[14px] font-medium">
+                    {usdcBalance !== null
+                      ? `${100} XP`
+                      : "0.00 USDC"}
+                  </span>
+                  
+                </div>
+                </div>
+
+                
               </div>
             </div>
           </header>
@@ -402,53 +446,67 @@ export default function Home() {
 
               <div className="flex-1 flex  justify-center flex-col">
                 <div className="max-w-[600px] w-full">
-                  <div className="max-w-[600px] w-full   bg-[#FFFF] rounded-2xl  p-8 md:p-8 ">
-                    <div className="">
-                      <div className="flex justify-between items-center">
-                       <div>
-                       <h1 className="font-bold md:text-[24px] text-[18px] text-[#000]">
-                        Spin the wheel
-                      </h1>
-                      <p className="text-[14px] opacity-40 text-[#000]">
-                        By wagerwise
-                      </p>
-                       </div>
-                       {landedLabel && (
-                      <span className="text-white bg-[#F56CA0] px-3 py-1 font-semibold text-30px">{landedLabel}</span>  )}
-                      </div>
-                      
-                      <div className=" py-5 my-4  rounded-xl justify-center flex items-center ">
-                        <SpinWheel
-                          rotation={rotation}
-                          isSpinning={isSpinning}
-                        />
-                      </div>
-                      <div>
-                        <span className="text-[#000] text-[16px]  opacity-60 font-medium">
-                          Select amount : 
-                        </span>
-                        <div className="flex items-center gap-6 flex-wrap my-4 justify-center">
-                          {[0.1, 0.2, 0.3, 0.4].map((amount) => (
-                            <button
-                              key={amount}
-                              onClick={() => setSelectedAmount(amount)}
-                              className={`bg-[#F56CA0] font-bold px-6 py-2 rounded-lg flex items-center gap-1  ${
-                                selectedAmount === amount ? "opacity-70" : ""
-                              }`}
-                            >
-                              <Image
-                                src={Logoimg}
-                                alt="Logo"
-                                width={20}
-                                height={20}
-                              />
-                              ${amount}
-                            </button>
-                          ))}
+                  <div className="flex justify-end mb-4">
+                    {/* <button
+                      onClick={() => setCurrentGame(currentGame === 'wheel' ? 'updown' : 'wheel')}
+                      className="bg-[#F56CA0] font-bold px-4 py-2 rounded-sm text-white"
+                    >
+                      {currentGame === 'wheel' ? 'Next Game' : 'Previous Game'}
+                    </button> */}
+                  </div>
+                  
+                  {currentGame === 'wheel' ? (
+                    <div className="max-w-[600px] w-full bg-[#FFFF] rounded-2xl p-8 md:p-8">
+                      <div className="">
+                        <div className="flex justify-between items-center">
+                         <div>
+                         <h1 className="font-bold md:text-[24px] text-[18px] text-[#000]">
+                          Spin the wheel
+                        </h1>
+                        <p className="text-[14px] opacity-40 text-[#000]">
+                          By wagerwise
+                        </p>
+                         </div>
+                         {landedLabel && (
+                        <span className="text-white bg-[#F56CA0] px-3 py-1 font-semibold text-30px">{landedLabel}</span>  )}
+                        </div>
+                        
+                        <div className=" py-5 my-4  rounded-xl justify-center flex items-center ">
+                          <SpinWheel
+                            rotation={rotation}
+                            isSpinning={isSpinning}
+                          />
+                        </div>
+                        <div>
+                          <span className="text-[#000] text-[16px]  opacity-60 font-medium">
+                            Select amount : 
+                          </span>
+                          <div className="flex items-center gap-6 flex-wrap my-4 justify-between">
+                            {[0.2, 0.5, 1.0, 2.0].map((amount) => (
+                              <button
+                                key={amount}
+                                onClick={() => setSelectedAmount(amount)}
+                                className={`bg-[#F56CA0] font-bold w-[100px] py-2 rounded-lg flex items-center gap-1 justify-center ${
+                                  selectedAmount === amount ? "opacity-70" : ""
+                                }`}
+                              >
+                                <Image
+                                  src={Logoimg}
+                                  alt="Logo"
+                                  width={20}
+                                  height={20}
+                                />
+                                ${amount}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    null
+                    // <UpDownGame />
+                  )}
 
                   <div className="flex justify-between gap-6 items-center">
                     <button
