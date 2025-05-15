@@ -139,6 +139,16 @@ export default function Home() {
 
   const handleSpin = async () => {
     if (!selectedAmount || isSpinning || canClaim) return;
+
+    // Check if user has enough USDC
+    if (usdcBalance === null || usdcBalance < selectedAmount) {
+      toast.error(`Insufficient USDC balance. You need ${selectedAmount} USDC to play.`, {
+        position: "bottom-left",
+        theme: "dark",
+      });
+      return;
+    }
+
     try {
       const transactionResult = await sendusdc();
       if (transactionResult.error) {
@@ -276,6 +286,7 @@ export default function Home() {
     }
   };
 
+  
   const sendusdc = async () => {
     try {
       if (!wallet) throw new Error("Wallet is not connected.");
